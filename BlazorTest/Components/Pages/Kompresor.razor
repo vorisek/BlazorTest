@@ -1,0 +1,110 @@
+﻿@page "/kompresor"
+@using System.Net.Http
+@using System.Net.Http.Json
+@using System.Threading.Tasks
+@inject HttpClient Http
+
+<h3>Stav</h3>
+
+@if (sensorData == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <Card Class="mb-8" Style="width:18rem;">
+        <CardHeader Size="HeadingSize.H2">
+            Stav
+        </CardHeader>
+        <CardBody>
+            
+            <CardText>Some quick example text to build on the card title and make up the bulk of the card's content.</CardText>
+            <Progress Class="mb-3">
+                <ProgressBar Color="ProgressColor.Primary" Width="40" />
+            </Progress>
+        </CardBody>
+        <CardBody>
+            <p>
+            <Button Color="ButtonColor.Success" To="#" Type="ButtonType.Link">Go somewhere</Button>
+            <Button Color="ButtonColor.Danger" To="#" Type="ButtonType.Link">Go somewhere</Button>
+            </p>
+        </CardBody>
+        <CardBody>
+            <Button Color="ButtonColor.Primary" To="#" Type="ButtonType.Link">Go somewhere</Button>
+        </CardBody>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">Y0 (kompresor):</li>
+            <li class="list-group-item">Y1 (ventil odpouštění):</li>
+            <li class="list-group-item">Y3 (lednička):</li>
+            <li class="list-group-item">X2 (motor): </li>
+        </ul>
+    </Card>
+
+    <Card Class="mb-8" Style="width:18rem;">
+        <CardHeader Size="HeadingSize.H2">
+            Stav
+        </CardHeader>
+        <CardBody>
+
+            <CardText>Some quick example text to build on the card title and make up the bulk of the card's content.</CardText>
+        </CardBody>
+        <CardBody>
+            <Button Color="ButtonColor.Success" To="#" Type="ButtonType.Link">Go somewhere</Button>
+            <Button Color="ButtonColor.Danger" To="#" Type="ButtonType.Link">Go somewhere</Button>
+        </CardBody>
+        <CardBody>
+            <Button Color="ButtonColor.Primary" To="#" Type="ButtonType.Link">Go somewhere</Button>
+        </CardBody>
+        
+    </Card>
+
+}
+
+@code {
+    private SensorData sensorData;
+    private bool isPolling = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Start polling data every second
+        _ = StartPollingAsync();
+    }
+
+    private async Task StartPollingAsync()
+    {
+        while (isPolling)
+        {
+            await FetchData();
+            await Task.Delay(1000); // Wait for 1 second
+        }
+    }
+
+    private async Task FetchData()
+    {
+        try
+        {
+            sensorData = await Http.GetFromJsonAsync<SensorData>("http://10.10.0.205/compressor/get_state.php");
+            StateHasChanged(); // Trigger a re-render
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching data: {ex.Message}");
+        }
+    }
+
+    public void Dispose()
+    {
+        isPolling = false; // Stop the polling when the component is disposed
+    }
+
+    public class SensorData
+    {
+        public float t_oil { get; set; }
+        public float pressure_before { get; set; }
+        public float pressure_after { get; set; }
+        public int wy0 { get; set; }
+        public int wx0 { get; set; }
+        public int keep_awake { get; set; }
+        public int state { get; set; }
+    }
+}
